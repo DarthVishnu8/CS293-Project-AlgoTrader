@@ -1,39 +1,35 @@
 #include "receiver.h"
-#include<string>
-#include<vector>
+#include <vector>
+#include <string>
 #include<unordered_map>
+
 using namespace std;
-
-int main() {
-
-    Receiver rcv;
-    sleep(5);
-    std::string message;
-    while (true) {
-        message = rcv.readIML();
-
-        // Check for the termination message "$"
-        if (message == "$") {
-            std::cout << "Received termination message. Exiting..." << std::endl;
-            break;
+vector<string> splitt(string s)
+{
+    string tmp="";
+    vector<string> ans;
+    for(char& c: s)
+    {
+        if(c!=' ')
+        {
+            tmp+=c;
         }
-
-        // Print the received message
-        std::cout << message;
+        else
+        {
+            ans.push_back(tmp);
+            tmp="";
+        }
     }
-
-    // Close the receiver and exit
-    rcv.terminate();
-    return 0;
+    return ans;
 }
 
-vector<string> splitt(string s)
+vector<string> splitn(string s)
 {
     string tmp="";
     vector<string> ans;
     for(auto c: s)
     {
-        if(c!=' ')
+        if(c!='#')
         {
             tmp+=c;
         }
@@ -69,4 +65,36 @@ string processor(string stocking){
             }
     }
     return ans;
+}
+int main() {
+
+    Receiver rcv;
+    sleep(4);
+    std::string message = rcv.readIML();
+    vector<string> ans;
+    ans = splitn(message);
+    for(auto c:ans){
+        cout << processor(c);
+    }
+    // std::string line;
+    // cout <<R
+    // size_t start = 0;
+    // size_t end = message.find('\n');
+    // while (end != std::string::npos) {
+    //     line = message.substr(start, end - start);
+    //     lines.push_back(line);
+    //     start = end + 1;
+    //     end = message.find('\n', start);
+    // }
+    
+    // // Add the last line (if any)
+    // line = message.substr(start, end);
+    // lines.push_back(line);
+    // cout<<lines.size()<<" is the size";
+    // // Now 'lines' contains the individual lines
+    // for (const std::string& s : lines) {
+    //     std::cout << s <<"is it done"<< std::endl;
+    // }
+    
+    return 0;
 }
