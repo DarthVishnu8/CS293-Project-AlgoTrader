@@ -77,10 +77,13 @@ vector<string> splitt(string s)
     vector<string> ans;
     for(char& c: s)
     {
-        if(c!=' ')
+    if(int(c) == 13){//cout<<"CARRIGE RETURN SAALA";
+    continue;}
+        else if(c!=' ')
         {
             tmp+=c;
         }
+
         else
         {
             ans.push_back(tmp);
@@ -101,6 +104,7 @@ vector<string> splitn(string s)
         {
             tmp+=c;
         }
+        else if(c == '\r'){cout<<"chutiya";continue;}
         else
         {
             ans.push_back(tmp);
@@ -115,14 +119,28 @@ string processor(string &stocking, MyMap &order_book){
     string ans="No Trade\n";
     //cout << "yes im here";
     vector<string> order=splitt(stocking);
+    //return "_"+order[0]+"*";
+    
     //cout<< "splitting done";
-    //cout << order[0] << order[1] <<order[2];
-    cout << order_book[order[0]];
+    //cout <<"\n test:"<< order[0] <<" "<< order[1] <<order[2];
+    //cout << order_book[order[0]];
     if(order_book[order[0]]==0)
     {
+        //cout <<"order 1 is:"<< order[1]<<"\n";
         order_book[order[0]]=stoi(order[1]);
+        //bool flag =(order[0]=="ASML");
+        //cout <<"flag is"<< flag;
+        //cout << " changed to :" <<order_book["ASML"];
+        if(order[2] == "b"){
+            ans = order[0]+ " " + order[1]+ " s\n";
+            return ans;
+        }
+        else{
+            ans = order[0]+ " " + order[1]+ " s\n";
+            return ans;
+        }
     }
-    if(order[2] == "b#"){
+    if(order[2] == "b"){
         if(stoi(order[1]) > order_book[order[0]]){
             ans = order[0]+ " " + order[1]+ " s\n";
             order_book[order[0]]= stoi(order[1]);
@@ -148,6 +166,9 @@ int main() {
     int s= ans.size();
     for(int i=0; i<s;i++){
         cout << processor(ans[i],order_book);
+        //cout << int(ans[i][0]);
+        //cout << "New value:" <<order_book["ASML"];
+
     }
     //cout << processor(ans[0],order_book);
     // vector<string> s1 = splitt(ans[0]);
