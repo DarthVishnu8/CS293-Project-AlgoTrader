@@ -94,7 +94,7 @@ vector<string> splitn(string s)
         {
             tmp+=c;
         }
-        else if(c == '\r'){cout<<"chutiya";continue;}
+        //else if(c == '\r'){cout<<"chutiya";continue;}
         else
         {
             ans.push_back(tmp);
@@ -116,7 +116,7 @@ string processor(string &stocking, MyUnorderedMap<string,int> &order_book){
     //cout << order_book[order[0]];
     if(order_book[order[0]]==0)
     {
-        //cout <<"order 1 is:"<< order[1]<<"\r";
+        //cout <<"order 1 is:"<< order[1]<<endl;
         order_book[order[0]]=stoi(order[1]);
         //bool flag =(order[0]=="ASML");
         //cout <<"flag is"<< flag;
@@ -144,23 +144,54 @@ string processor(string &stocking, MyUnorderedMap<string,int> &order_book){
     }
     return ans;
 }
-int main() {
+int main(int argc, char **argv) {
 
+    if(strcmp(argv[1],"1")==0){
     MyUnorderedMap<string,int> order_book;
     Receiver rcv;
     // sleep(4);
     std::string message = rcv.readIML();
     //cout<<message;
+    bool characterExists = 0;
+
+
+    while(!characterExists){
+    characterExists = message.find('$') != std::string::npos;
     vector<string> ans;
+    //while(message != "$"){
     ans = splitn(message);
     int s= ans.size();
+    //cout << "been here";
     for(int i=0; i<s;i++){
         cout << processor(ans[i],order_book);
+        // cout << ans[i];
         //cout << int(ans[i][0]);
         //cout << "New value:" <<order_book["ASML"];
 
     }
+    //cout  << message;
+    if(!characterExists) message = rcv.readIML();
+    else break;
+    }
+    }
+    else if(strcmp(argv[1],"2")==0){
+        cout<<"argument is 2";
+    }
+    //cout<<message << "second time";
+    //ans.clear();
     
+    //cout<<characterExists;
+    
+    //   if(message[0] == '$'){cout << "end";}
+    //}
+    // ans = splitn(message);
+    // s= ans.size();
+    // for(int i=0; i<s;i++){
+    //     cout << processor(ans[i],order_book);
+    //     //cout << int(ans[i][0]);
+    //     //cout << "New value:" <<order_book["ASML"];
+
+    // }
     
     return 0;
 }
