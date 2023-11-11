@@ -1,7 +1,7 @@
 #include "receiver.h"
 #include <vector>
 #include <string>
-
+#include <unordered_set>
 using namespace std;
 
 template <typename KeyType, typename ValueType>
@@ -61,6 +61,7 @@ public:
     }
 };
 
+
 vector<string> splitt(string s)
 {
     string tmp="";
@@ -81,6 +82,94 @@ vector<string> splitt(string s)
     }
     ans.push_back(tmp);
     return ans;
+}
+
+MyUnorderedMap<string,int> inputProcessing(string inp, std::vector<string>& stocks, int n, std::vector<int>& price){
+    vector<string> elements = splitt(inp);
+    // vector<int> row;
+    int s = elements.size();
+    //cout << elements[s-2] << " is the price";
+    price.push_back(stoi(elements[s-2]));
+    string order_type = elements[s-1];
+    MyUnorderedMap<string,int> line;
+    for (int i=0; i < s/2 -1; i++){
+
+        if(order_type == "b"){
+            auto it = std::find(stocks.begin(), stocks.end(), elements[2*i]);
+            if(it != stocks.end())
+            {
+                // cout << "found";
+                int index = it-stocks.begin();
+                line[elements[2*i]] = stoi(elements[2*i+1]);
+            }
+            else{
+                // cout <<elements[2*i]<< " NF";
+
+                line[elements[2*i]] = stoi(elements[2*i+1]);
+                stocks.push_back(elements[2*i]);
+            }
+        }
+
+        else{
+            auto it = std::find(stocks.begin(), stocks.end(), elements[2*i]);
+            if(it != stocks.end())
+            {
+                int index = it-stocks.begin();
+                line[elements[2*i]] = stoi(elements[2*i+1]) * -1;
+            }
+            else{
+                line[elements[2*i]] = stoi(elements[2*i+1]) * -1;
+                stocks.push_back(elements[2*i]);
+            }
+        }
+
+    }
+    return line;
+}
+
+
+
+void kiloprocessor(std::vector<std::vector<int>> &subs,vector<string> stocks, MyUnorderedMap<int, MyUnorderedMap<string,int> >& matrix){
+
+    for (int i=0; i<subs.size(); i++){
+            // cout << "Analyzing subset: ";
+            // for (auto f:subs[i]){cout <<f<<" ";}
+            if(subs[i].size()==0){
+                subs.erase(std::remove_if(subs.begin(), subs.end(), [](const std::vector<int>& subset) {
+                    return subset.empty();
+                }), subs.end());--i;
+                // cout << "removed empty subset\n";
+                continue;
+                }
+            for (auto c: stocks){
+                int s = 0;
+                for(auto j : subs[i]){
+                    // cout << j << " is the no in subset";
+                    s += matrix[j][c];
+                    // cout << "added " << matrix[j][c];
+                }
+                // cout << "sum for "<<c<< " is "<<s<<"\n";
+                if(s != 0){
+                    //for (auto f:subs[i]){cout <<f<<" ";}
+                    subs.erase(subs.begin()+i);
+                    --i;
+                // cout << "deleted\n";
+                break;
+                }
+                // else{
+                //     //for (auto f:subs[i]){cout <<f;}
+                //     cout << " passed " << c<<endl;
+                // }
+                // cout << "sum is "<<s;
+            }
+            // for (auto c: subs){
+            //     cout << "remaining subsets: ";
+            //         for (auto d: c){
+            //             std::cout << d<<" ";
+            //         }
+            //         std::cout << "\n";
+            //     }
+        }
 }
 
 vector<string> splitn(string s)
@@ -187,6 +276,32 @@ string processor(string &stocking, MyUnorderedMap<string,std::vector<int>> &orde
 
     return ans;
 }
+
+std::vector<std::vector<int>> generateSubsets(vector<int> set) {
+    int n = set.size();
+    std::vector<std::vector<int>> subs;
+    
+    // Generate subsets without the last element
+    for (int i = 0; i < (1 << (n - 1)); ++i) {
+        std::vector<int> subset;
+
+        for (int j = 0; j < n - 1; ++j) {
+            if ((i & (1 << j)) != 0) {
+                subset.push_back(set[j]);
+            }
+        }
+        subs.push_back(subset);
+    }
+
+    // Append the last element to each subset
+    int lastElementIndex = n - 1;
+    for (auto &subset : subs) {
+        subset.push_back(set[lastElementIndex]);
+    }
+
+    return subs;
+}
+
 int main(int argc, char **argv) {
 
     if(strcmp(argv[1],"1")==0){
@@ -218,7 +333,74 @@ int main(int argc, char **argv) {
 
 
     else if(strcmp(argv[1],"2")==0){
-        cout<<"argument is 2";
+
+            MyUnorderedMap<int, MyUnorderedMap<string,int> > matrix;
+            
+            vector<string> stocks;
+        Receiver rcv;
+        // sleep(4);
+        std::string message = rcv.readIML();
+        // cout << message;
+        // rcv.terminate();
+        vector<string> splitlines;
+        splitlines = splitn(message);
+        vector<int> prices;
+        vector<int> profits;
+        int count = 0;
+        int finalprofit = 0;
+        vector<vector<int>> paisa;
+        vector<int> orders;
+        for (auto c: splitlines){
+            orders.push_back(count);
+            for (auto c: orders){cout << c<<" ";}
+            matrix[count] = inputProcessing(c, stocks,count,prices);
+            std::vector<std::vector<int>> subs = generateSubsets(orders);
+            kiloprocessor(subs, stocks, matrix);
+            cout<< subs.size()<<endl;
+            if(subs.size()==0){count++;continue;cout <<"No arbitrage found\n";}
+            int maxp = 0;
+            vector<int> plines;
+            for (int i=0; i<subs.size(); i++){
+                int p = 0;
+                for (auto j : subs[i]){
+                    p += prices[j];
+                }
+                if(p > maxp) {maxp = p;plines = subs[i];}
+            }
+            cout << "max profit is "<<maxp << " in ";
+            for (auto c: plines){
+                cout << c <<" ";
+            }
+            if(maxp > 0){
+                paisa.push_back(plines);
+                finalprofit += maxp;
+            }
+            count++;
+            // cout<<"stocks till now:";
+            // for(auto c: stocks){cout <<c;}
+            // cout <<"\n";
+        }
+        // for (int i = 0; i<3;i++){
+        //     for(auto c:stocks){
+        //         cout << c << ": "<<matrix[i][c]<<". ";
+        //     }
+        //     cout <<"\n";
+        // }
+
+        
+
+
+
+    //      PRINT GENERATED SUBSETS
+    //
+    //     for (auto c: subs){
+    //     for (auto d: c){
+    //         std::cout << d<<" ";
+    //     }
+    //     std::cout << "\n";
+    // }
+    return 0;
+
     }
     
     return 0;
