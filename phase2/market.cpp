@@ -1,17 +1,3 @@
-// #include "market.h"
-
-// market::market(int argc, char** argv)
-// {
-	
-// }
-
-// void market::start()
-// {
-	
-// }
-
-// original code above this
-
 #include "market.h"
 #include <vector>
 #include <fstream>
@@ -118,6 +104,7 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
     vector<vector<string>> ans;
     for(auto order: orders)
     {
+        order+=' ';
         vector<string> tmp;
         string t="";
         for(auto c: order)
@@ -128,10 +115,34 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
             else{
                 t+=c;
             }
-          ans.push_back(tmp);
-          tmp.clear();  
         }
+          ans.push_back(tmp);
+          tmp.clear();
 
+    }
+    return ans;
+}
+
+
+
+MyUnorderedMap<string,vector<string>> processBuy(vector<vector<string>> orders)
+{
+    MyUnorderedMap<string,vector<string>> ans;
+    for(auto c: orders)
+    {
+        if(c[2][0]=='B')
+        ans[c[2]].push_back()
+    }
+    return ans;
+}
+
+vector<vector<string>> processSell(vector<vector<string>> orders)
+{
+    vector<vector<string>> ans;
+    for(auto c: orders)
+    {
+        if(c[2][0]=='S')
+        ans.push_back(c);
     }
     return ans;
 }
@@ -147,6 +158,8 @@ void market::start()
     int numberOfTrades=0;
     int numberofShares=0;
     vector<vector<string>> orderListItems=splitBySpaceToGetItems(orderList); // This function returns a vector of string vectors which contains the individual information regarding all orders
+    vector<vector<string>> buyOrderItems=processBuy(orderListItems);
+    vector<vector<string>> sellOrderItems=processSell(orderListItems);
 
 }
 
