@@ -59,6 +59,40 @@ public:
         }
         return table[index].value;
     }
+    bool operator==(const MyUnorderedMap& other) const {
+    if (table.size() != other.table.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < table.size(); ++i) {
+        if ((table[i].occupied && table[i].value != 0) !=
+            (other.table[i].occupied && other.table[i].value != 0)) {
+            return false;
+        }
+
+        if (table[i].occupied && table[i].value != 0 &&
+            (table[i].key != other.table[i].key || table[i].value != other.table[i].value)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool operator!=(const MyUnorderedMap& other) const {
+    return !(*this == other);
+}
+
+    void printMap() const {
+        std::cout << "Map Contents:\n";
+        for (const Entry& entry : table) {
+            if (entry.occupied) {
+                std::cout << entry.key << ": " << entry.value << "\n";
+            }
+        }
+        std::cout << "End of Map\n";
+    }
+
 };
 
 
@@ -84,18 +118,27 @@ vector<string> splitt(string s)
     return ans;
 }
 
-MyUnorderedMap<string,int> inputProcessing(string inp, std::vector<string>& stocks, int n, std::vector<int>& price){
+MyUnorderedMap<string,int> inputProcessing(string& inp, std::vector<string>& stocks, int n, std::vector<int>& price, bool* flag){
     vector<string> elements = splitt(inp);
     // vector<int> row;
     int s = elements.size();
     //cout << elements[s-2] << " is the price";
-    price.push_back(stoi(elements[s-2]));
     string order_type = elements[s-1];
     MyUnorderedMap<string,int> line;
+    
+    if(order_type=="b"){
+            price.push_back(stoi(elements[s-2]));
+            *flag = 0;
+    }
+    else{        
+            price.push_back(-1*stoi(elements[s-2]));
+            *flag = 1;
+    }
     for (int i=0; i < s/2 -1; i++){
 
         if(order_type == "b"){
             auto it = std::find(stocks.begin(), stocks.end(), elements[2*i]);
+            elements[s-1] = "s#";
             if(it != stocks.end())
             {
                 // cout << "found";
@@ -111,29 +154,42 @@ MyUnorderedMap<string,int> inputProcessing(string inp, std::vector<string>& stoc
         }
 
         else{
+            elements[s-1] = "b#";
             auto it = std::find(stocks.begin(), stocks.end(), elements[2*i]);
             if(it != stocks.end())
             {
                 int index = it-stocks.begin();
-                line[elements[2*i]] = stoi(elements[2*i+1]) * -1;
+                line[elements[2*i]] = stoi(elements[2*i+1]);
             }
             else{
-                line[elements[2*i]] = stoi(elements[2*i+1]) * -1;
+                line[elements[2*i]] = stoi(elements[2*i+1]);
                 stocks.push_back(elements[2*i]);
             }
         }
 
     }
+    inp = "";
+    for (auto d: elements){
+        if(d != "b#" || d!= "s#")
+        {
+        inp += d;
+        inp += " ";
+        }
+        else inp += d;
+    }
+
     return line;
 }
 
 
 
-void kiloprocessor(std::vector<std::vector<int>> &subs,vector<string> stocks, MyUnorderedMap<int, MyUnorderedMap<string,int> >& matrix){
+void kiloprocessor(std::vector<std::vector<int>> &subs,vector<string> stocks, MyUnorderedMap<int, MyUnorderedMap<string,int> >& matrix, MyUnorderedMap<int,bool>& Sign){
 
     for (int i=0; i<subs.size(); i++){
+
             // cout << "Analyzing subset: ";
             // for (auto f:subs[i]){cout <<f<<" ";}
+
             if(subs[i].size()==0){
                 subs.erase(std::remove_if(subs.begin(), subs.end(), [](const std::vector<int>& subset) {
                     return subset.empty();
@@ -145,7 +201,8 @@ void kiloprocessor(std::vector<std::vector<int>> &subs,vector<string> stocks, My
                 int s = 0;
                 for(auto j : subs[i]){
                     // cout << j << " is the no in subset";
-                    s += matrix[j][c];
+                    if (!Sign[j]) s += matrix[j][c];
+                    else s -= matrix[j][c];
                     // cout << "added " << matrix[j][c];
                 }
                 // cout << "sum for "<<c<< " is "<<s<<"\n";
@@ -153,7 +210,7 @@ void kiloprocessor(std::vector<std::vector<int>> &subs,vector<string> stocks, My
                     //for (auto f:subs[i]){cout <<f<<" ";}
                     subs.erase(subs.begin()+i);
                     --i;
-                // cout << "deleted\n";
+                // cout << "deleted by "<<c<<"\n";
                 break;
                 }
                 // else{
@@ -309,7 +366,7 @@ int main(int argc, char **argv) {
     Receiver rcv;
     // sleep(4);
     std::string message = rcv.readIML();
-    //cout<<message;
+    // cout<<message;
 
 
     bool characterExists = 0;
@@ -334,9 +391,9 @@ int main(int argc, char **argv) {
 
     else if(strcmp(argv[1],"2")==0){
 
-            MyUnorderedMap<int, MyUnorderedMap<string,int> > matrix;
-            
-            vector<string> stocks;
+        MyUnorderedMap<int, MyUnorderedMap<string,int> > matrix;
+        MyUnorderedMap<int,bool> Sign;
+        vector<string> stocks;
         Receiver rcv;
         // sleep(4);
         std::string message = rcv.readIML();
@@ -345,19 +402,60 @@ int main(int argc, char **argv) {
         vector<string> splitlines;
         splitlines = splitn(message);
         vector<int> prices;
-        vector<int> profits;
         int count = 0;
         int finalprofit = 0;
-        vector<vector<int>> paisa;
         vector<int> orders;
-        for (auto c: splitlines){
-            orders.push_back(count);
-            for (auto c: orders){cout << c<<" ";}
-            matrix[count] = inputProcessing(c, stocks,count,prices);
+        for (auto &c: splitlines){
+            bool* flag = new bool;
+            MyUnorderedMap<string,int> temp = inputProcessing(c, stocks,count,prices, flag); //temporary processing;
+            // matrix[count] = inputProcessing(c, stocks,count,prices, flag);
+            Sign[count] = *flag;
+            if(orders.size()==0){
+                orders.push_back(count);    // if no orders present directly add
+               //cout << "empty book\n";
+            }
+            else{
+                for(auto x : orders){       // otherwise iterate over previous orders
+                //cout << "Checking "<<x<<endl;
+                // matrix[x].printMap();
+                // temp.printMap();
+                if(matrix[x] == temp) {
+                    if(Sign[x] == *flag){   // if order type is same (bb) or (ss), check price
+                        //cout << "Match found\n";
+                            if(prices[count] <= prices[x]){
+                                count++;
+                                // cout <<"Buyissue:No Trade\n";
+                                cout <<"No Trade\n"; 
+                                continue;}
+                    }
+                    else{                   // if order type is different compare price
+                        if(prices[count] + prices[x] == 0){
+                            orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());
+                            count++;
+                            //cout <<"Cancelled:No Trade\n";
+                            cout <<"No Trade\n";
+
+                             continue;
+                        }
+                    }
+                }
+                // if(matrix[x] == temp && flag != Sign[x]) cout << "different type";                            // check if similar order structure is present
+                }
+                orders.push_back(count);                            // check if order type is same
+            }
+            matrix[count] = temp;
+            // orders.push_back(count);
+            // matrix[count]= inputProcessing(c, stocks,count,prices,flag);
+            // Sign[count] = *flag;
+
+            //for (auto c: orders){cout << c<<" ";}
             std::vector<std::vector<int>> subs = generateSubsets(orders);
-            kiloprocessor(subs, stocks, matrix);
-            cout<< subs.size()<<endl;
-            if(subs.size()==0){count++;continue;cout <<"No arbitrage found\n";}
+            kiloprocessor(subs, stocks, matrix, Sign);
+            //cout<< subs.size()<<endl;
+            if(subs.size()==0){count++;
+            // cout <<"Nocomb:No Trade\n";
+            cout <<"No Trade\n";
+            continue;}
             int maxp = 0;
             vector<int> plines;
             for (int i=0; i<subs.size(); i++){
@@ -367,19 +465,34 @@ int main(int argc, char **argv) {
                 }
                 if(p > maxp) {maxp = p;plines = subs[i];}
             }
-            cout << "max profit is "<<maxp << " in ";
-            for (auto c: plines){
-                cout << c <<" ";
-            }
+            // cout << "prices are: \n";
+            // for (auto c: prices){
+            //     cout << c <<". ";
+            // }
+            // cout <<endl;
+            // cout<<"orders till now:";
+            // for(auto c: orders){cout <<c<<". ";}
+            // cout <<"\n";
             if(maxp > 0){
-                paisa.push_back(plines);
                 finalprofit += maxp;
+                for (auto it = plines.rbegin(); it != plines.rend(); ++it) {
+                    std::cout << splitlines[*it]<<"\n";
+                }
+
+                for(auto k:plines){
+                    orders.erase(std::remove(orders.begin(), orders.end(), k), orders.end());
+                }
+            }
+            else{
+                count++;
+                // cout <<"Loss:No Trade\n";
+                cout <<"No Trade\n";
+                continue;
             }
             count++;
-            // cout<<"stocks till now:";
-            // for(auto c: stocks){cout <<c;}
-            // cout <<"\n";
         }
+        // if(matrix[1] == matrix[2]){cout << "3 and 5 are same";}
+        cout << finalprofit;
         // for (int i = 0; i<3;i++){
         //     for(auto c:stocks){
         //         cout << c << ": "<<matrix[i][c]<<". ";
