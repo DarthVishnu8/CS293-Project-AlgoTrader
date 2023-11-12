@@ -123,26 +123,325 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
     return ans;
 }
 
-
-
-MyUnorderedMap<string,vector<string>> processBuy(vector<vector<string>> orders)
+int stringcmp(string s1, string s2)  // this function returns 0 if strings are equal, -1 if first string is smaller, 1 if second string is smaller
 {
-    MyUnorderedMap<string,vector<string>> ans;
+    int index=0;
+    while(true)
+    {
+        if(s1[index]=='\0' && s2[index]=='\0')
+        return 0;
+
+        if(s1[index]=='\0' && s2[index]!='\0')
+        return -1;
+
+        if(s1[index]!='\0' && s2[index]=='\0')
+        return 1;
+
+        if(int(s1[index]) < int(s2[index]))
+        return -1;
+
+        if(int(s1[index]) > int(s2[index]))
+        return 1;
+
+
+        index++;
+    }
+}
+
+int parent(int x)
+{
+    return (x-1)/2;
+}
+
+int left(int x)
+{
+    return 2*x+1;
+}
+
+int right(int x)
+{
+    return 2*x+2;
+}
+
+void deleteBuyMostPriorityElement(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock)
+{
+    int indexLen=ans[stock].size()-1;
+    ans[stock][0]= ans[stock][indexLen];
+    ans[stock].pop_back();
+    heapifyMax(ans,stock,0);
+}
+
+void deleteSellMostPriorityElement(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock)
+{
+    int indexLen=ans[stock].size()-1;
+    ans[stock][0]= ans[stock][indexLen];
+    ans[stock].pop_back();
+    heapifyMin(ans,stock,0);
+}
+
+void mySwap(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i, int j)
+{
+    vector<string> tmp=ans[stock][i];
+    ans[stock][i]=ans[stock][j];
+    ans[stock][j]=tmp;
+}
+
+// price starts with the character $ (linear combinations possible so cannot hardcode the index) will change this later. For now we have hardcoded the price index
+
+void heapifyMax(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i)
+{
+    int c;
+    int indexLen=ans[stock].size()-1;
+    if(right(i)<indexLen)       // right does not exist
+    {
+        if(left(i)<indexLen)    // neither left nor right exists if true
+        {
+            c=i;
+        }
+
+        else if (ans[stock][i][4] > ans[stock][left(i)][4])       // if price of stock[i] > stock[left(i)]
+        {
+            c=i;
+        }
+        
+        else if (ans[stock][i][4] < ans[stock][left(i)][4])      // if price of stock[i] < stock[left(i)]
+        {
+            c=left(i);
+        }
+
+        else{
+            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][left(i)][0])
+            c=left(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=left(i);
+            }
+        }
+
+    }
+
+    else{
+        if(ans[stock][i][4] > ans[stock][left(i)][4])
+        {
+            if(ans[stock][i][4] > ans[stock][right(i)][4])
+            c=i;
+
+            else if(ans[stock][i][4] < ans[stock][right(i)][4])
+            c=right(i);
+
+            else{
+            if(ans[stock][i][0] < ans[stock][right(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][right(i)][0])
+            c=right(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=right(i);
+            }
+        }
+        }
+
+        else if(ans[stock][i][4] == ans[stock][left(i)][4])
+        {
+            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][left(i)][0])
+            c=left(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=left(i);
+            }
+        }
+
+        else{
+            if(ans[stock][left(i)][4] > ans[stock][right(i)][4])
+            c=left(i);
+
+            else if(ans[stock][left(i)][4] < ans[stock][right(i)][4])
+            c=right(i);
+
+            else{
+            if(ans[stock][left(i)][0] < ans[stock][right(i)][0])       // prioritise by time if price same
+            c=left(i);
+
+            else if(ans[stock][left(i)][0] > ans[stock][right(i)][0])
+            c=right(i);
+
+            else{
+                if(stringcmp(ans[stock][left(i)][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
+                c=left(i);
+
+                else c=right(i);
+            }
+        }
+        }
+    }
+
+    if(c==i) return;
+
+    mySwap(ans,stock,i,c);
+
+    heapifyMax(ans,stock,c);
+
+}
+
+void heapifyMin(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i)
+{
+        int c;
+    int indexLen=ans[stock].size()-1;
+    if(right(i)<indexLen)       // right does not exist
+    {
+        if(left(i)<indexLen)    // neither left nor right exists if true
+        {
+            c=i;
+        }
+
+        else if (ans[stock][i][4] < ans[stock][left(i)][4])       // if price of stock[i] > stock[left(i)]
+        {
+            c=i;
+        }
+        
+        else if (ans[stock][i][4] > ans[stock][left(i)][4])      // if price of stock[i] < stock[left(i)]
+        {
+            c=left(i);
+        }
+
+        else{
+            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][left(i)][0])
+            c=left(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=left(i);
+            }
+        }
+
+    }
+
+    else{
+        if(ans[stock][i][4] < ans[stock][left(i)][4])
+        {
+            if(ans[stock][i][4] < ans[stock][right(i)][4])
+            c=i;
+
+            else if(ans[stock][i][4] > ans[stock][right(i)][4])
+            c=right(i);
+
+            else{
+            if(ans[stock][i][0] < ans[stock][right(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][right(i)][0])
+            c=right(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=right(i);
+            }
+        }
+        }
+
+        else if(ans[stock][i][4] == ans[stock][left(i)][4])
+        {
+            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
+            c=i;
+
+            else if(ans[stock][i][0] > ans[stock][left(i)][0])
+            c=left(i);
+
+            else{
+                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
+                c=i;
+
+                else c=left(i);
+            }
+        }
+
+        else{
+            if(ans[stock][left(i)][4] < ans[stock][right(i)][4])
+            c=left(i);
+
+            else if(ans[stock][left(i)][4] > ans[stock][right(i)][4])
+            c=right(i);
+
+            else{
+            if(ans[stock][left(i)][0] < ans[stock][right(i)][0])       // prioritise by time if price same
+            c=left(i);
+
+            else if(ans[stock][left(i)][0] > ans[stock][right(i)][0])
+            c=right(i);
+
+            else{
+                if(stringcmp(ans[stock][left(i)][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
+                c=left(i);
+
+                else c=right(i);
+            }
+        }
+        }
+    }
+
+    if(c==i) return;
+
+    mySwap(ans,stock,i,c);
+
+    heapifyMax(ans,stock,c);
+}
+
+void makeHeapMax(MyUnorderedMap<string,vector<vector<string>>> &ans, vector<string> c,string stock)              // creates a max heap
+{
+    ans[stock].push_back(c);
+    for(int i=ans[stock].size()-1;i>=0;i--)
+    heapifyMax(ans,stock,i);
+}
+
+void makeHeapMin(MyUnorderedMap<string,vector<vector<string>>> &ans, vector<string> c,string stock)             // creates a min heap
+{
+    ans[stock].push_back(c);
+    for(int i=ans[stock].size()-1;i>=0;i--)
+    heapifyMin(ans,stock,i);
+}
+
+
+MyUnorderedMap<string,vector<vector<string>>> processBuy(vector<vector<string>> orders)
+{
+    MyUnorderedMap<string,vector<vector<string>>> ans;
     for(auto c: orders)
     {
         if(c[2][0]=='B')
-        ans[c[2]].push_back()
+        makeHeapMax(ans,c,c[3]);
     }
     return ans;
 }
 
-vector<vector<string>> processSell(vector<vector<string>> orders)
+MyUnorderedMap<string,vector<vector<string>>> processSell(vector<vector<string>> orders)
 {
-    vector<vector<string>> ans;
+    MyUnorderedMap<string,vector<vector<string>>> ans;
     for(auto c: orders)
     {
         if(c[2][0]=='S')
-        ans.push_back(c);
+        makeHeapMin(ans,c,c[3]);
     }
     return ans;
 }
@@ -158,8 +457,8 @@ void market::start()
     int numberOfTrades=0;
     int numberofShares=0;
     vector<vector<string>> orderListItems=splitBySpaceToGetItems(orderList); // This function returns a vector of string vectors which contains the individual information regarding all orders
-    vector<vector<string>> buyOrderItems=processBuy(orderListItems);
-    vector<vector<string>> sellOrderItems=processSell(orderListItems);
+    MyUnorderedMap<string,vector<vector<string>>> buyOrderItems=processBuy(orderListItems);
+    MyUnorderedMap<string,vector<vector<string>>> sellOrderItems=processSell(orderListItems);
 
 }
 
