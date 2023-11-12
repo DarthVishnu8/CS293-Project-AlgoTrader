@@ -427,6 +427,9 @@ int main(int argc, char **argv) {
                                 // cout <<"Buyissue:No Trade\n";
                                 cout <<"No Trade\n"; 
                                 continue;}
+                            else{
+                                orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());   
+                            }
                     }
                     else{                   // if order type is different compare price
                         if(prices[count] + prices[x] == 0){
