@@ -672,6 +672,14 @@ if(!characterExists) message = rcv.readIML();
                                 }
                             }
                         }
+                        else{
+                            if(prices[count] == prices[x]){
+                                quantity[x] += quantity[count];
+                                count ++;
+                                cout << "No Trade\n";
+                                continue;
+                            }
+                        }
                     }
                     // if(matrix[x] == temp && flag != Sign[x]) cout << "different type";                            // check if similar order structure is present
                     }
@@ -716,9 +724,14 @@ if(!characterExists) message = rcv.readIML();
                             for(auto f: stocks){
                                 if(matrix[l][f] != 0){cout << f<<" "<< matrix[l][f]<<" ";}
                             }                         // work on this output
+                            if(Sign[l]){
+                            cout << prices[l]*-1<<" "<<q<<" ";
+                            cout << "b\n";
+                            }
+                            else {
                             cout << prices[l]<<" "<<q<<" ";
-                            if(Sign[l]){cout << "b\n";}
-                            else cout << "s\n";
+                            cout << "s\n";
+                            }
                         }
 
                         for(auto k:plines){
