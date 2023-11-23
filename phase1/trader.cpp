@@ -326,8 +326,16 @@ vector<string> splitn(string s)
     
 
 string processor(string &stocking, MyUnorderedMap<string,std::vector<int>> &order_book){
+    // cout << "processor is called\n";
     string ans="No Trade\r";
     vector<string> order=splitt(stocking);
+    
+    
+    // cout << "order is: ";
+    // for(auto c: stocking){
+    //     cout << c;
+    // }
+
 
     string stock = order[0];
     int bid = stoi(order[1]);
@@ -340,13 +348,13 @@ string processor(string &stocking, MyUnorderedMap<string,std::vector<int>> &orde
 
         if(order[2] == "b"){
             ans = order[0]+ " " + order[1]+ " s\r";
-            //ans = ans+"new trade buy";
+            // ans = ans+"new trade buy";
             return ans;
         }
 
         else{
             ans = order[0]+ " " + order[1]+ " b\r";
-            //ans+="new trade sell";
+            // ans+="new trade sell";
             return ans;
         }
 
@@ -460,7 +468,8 @@ int main(int argc, char **argv) {
     int s= ans.size();
     
     for(int i=0; i<s;i++){
-        cout << processor(ans[i],order_book);
+        string temp =  processor(ans[i],order_book);
+        cout << temp << "\n";
         // cout << ans[i];
     }
 
