@@ -111,7 +111,6 @@ bool operator!=(const MyUnorderedMap& other) const {
 
 };
 
-
 vector<string> splitt(string s)
 {
     string tmp="";
@@ -207,10 +206,12 @@ MyUnorderedMap<string,int> inputProcessingAgain(string& inp, std::vector<string>
     MyUnorderedMap<string,int> line;
     quantity.push_back(stoi(elements[s-2]));
     if(order_type=="b"){
+            // cout <<"PHOENIX'S PRICE: "<< stoi(elements[s-3])<<"\n";
             price.push_back(stoi(elements[s-3]));
             *flag = 0;
     }
     else{        
+            // cout <<"PHOENIX'S PRICE"<< stoi(elements[s-3])*-1<<"\n";
             price.push_back(-1*stoi(elements[s-3]));
             *flag = 1;
     }
@@ -322,14 +323,13 @@ vector<string> splitn(string s)
         }
     }
     return ans;
-}
-    
+}    
 
 string processor(string &stocking, MyUnorderedMap<string,std::vector<int>> &order_book){
     // cout << "processor is called\n";
     string ans="No Trade\r";
     vector<string> order=splitt(stocking);
-    
+  
     
     // cout << "order is: ";
     // for(auto c: stocking){
@@ -497,12 +497,17 @@ int main(int argc, char **argv) {
         int count = 0;
         int finalprofit = 0;
         vector<int> orders;
+
         bool characterExists = 0;
 
     while(!characterExists){
     characterExists = message.find('$') != std::string::npos;
-        splitlines = splitn(message);
-        for (auto &c: splitlines){
+        
+        vector<string> inputlines = splitn(message);
+        for (auto v:inputlines){
+            splitlines.push_back(v);
+        }
+        for (auto &c: inputlines){
             bool* flag = new bool;
             MyUnorderedMap<string,int> temp = inputProcessing(c, stocks,count,prices, flag); //temporary processing;
             // matrix[count] = inputProcessing(c, stocks,count,prices, flag);
@@ -512,6 +517,7 @@ int main(int argc, char **argv) {
                //cout << "empty book\n";
             }
             else{
+                bool br = 0;
                 for(auto x : orders){       // otherwise iterate over previous orders
                 //cout << "Checking "<<x<<endl;
                 // matrix[x].printMap();
@@ -521,9 +527,10 @@ int main(int argc, char **argv) {
                         //cout << "Match found\n";
                             if(prices[count] <= prices[x]){
                                 count++;
-                                // cout <<"Buyissue:No Trade\n";
-                                cout <<"No Trade\n"; 
-                                continue;}
+                                cout <<"Buyissue:No Trade\n";
+                                // cout <<"No Trade\n"; 
+                                br = 1;
+                                break;}
                             else{
                                 orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());   
                             }
@@ -532,15 +539,17 @@ int main(int argc, char **argv) {
                         if(prices[count] + prices[x] == 0){
                             orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());
                             count++;
-                            //cout <<"Cancelled:No Trade\n";
-                            cout <<"No Trade\n";
-
-                             continue;
+                            cout <<"Cancelled:No Trade\n";
+                            // cout <<"No Trade\n";
+                                br  = 1;
+                             break;
                         }
                     }
                 }
                 // if(matrix[x] == temp && flag != Sign[x]) cout << "different type";                            // check if similar order structure is present
                 }
+                if(br){continue;}
+                // cout << "no continue\n";
                 orders.push_back(count);                            // check if order type is same
             }
             matrix[count] = temp;
@@ -555,8 +564,8 @@ int main(int argc, char **argv) {
             kiloprocessor(subs, stocks, matrix, Sign);
             //cout<< subs.size()<<endl;
             if(subs.size()==0){count++;
-            // cout <<"Nocomb:No Trade\n";
-            cout <<"No Trade\n";
+            cout <<"Nocomb:No Trade\n";
+            // cout <<"No Trade\n";
             continue;}
             int maxp = 0;
             vector<int> plines;
@@ -572,9 +581,9 @@ int main(int argc, char **argv) {
             //     cout << c <<". ";
             // }
             // cout <<endl;
-        //     cout<<"orders till now:";
-        //     for(auto c: orders){cout <<c<<". ";}
-        //     cout <<"\n";
+            // cout<<"orders till now:";
+            // for(auto c: orders){cout <<c<<". ";}
+            // cout <<"\n";
         // for (int i = 0; i<count;i++){
         //     for(auto c:stocks){
         //         cout << c << ": "<<matrix[i][c]<<". ";
@@ -583,6 +592,8 @@ int main(int argc, char **argv) {
         // }
             if(maxp > 0){
                 finalprofit += maxp;
+                // cout << plines[0];
+                // cout << "Arbitrage: \n";
                 for (auto it = plines.rbegin(); it != plines.rend(); ++it) {
                     std::cout << splitlines[*it]<<"\n";
                 }
@@ -593,8 +604,8 @@ int main(int argc, char **argv) {
             }
             else{
                 count++;
-                // cout <<"Loss:No Trade\n";
-                cout <<"No Trade\n";
+                cout <<"Loss:No Trade\n";
+                // cout <<"No Trade\n";
                 continue;
             }
             count++;
@@ -640,10 +651,13 @@ if(!characterExists) message = rcv.readIML();
         vector<int> orders;
         while(!characterExists){
             characterExists = message.find('$') != std::string::npos;
-            splitlines = splitn(message);
-            for (auto &c: splitlines){
+            vector<string> inputlines = splitn(message);
+            for (auto v:inputlines){
+                splitlines.push_back(v);
+            }
+            for (auto &c: inputlines){
                 bool* flag = new bool;
-                MyUnorderedMap<string,int> temp = inputProcessingAgain(c, stocks,count,prices, flag, quantity); //temporary processing;
+                MyUnorderedMap<string,int> temp = inputProcessingAgain(c, stocks, count, prices, flag, quantity); //temporary processing;
                 // matrix[count] = inputProcessing(c, stocks,count,prices, flag);
                 Sign[count] = *flag;
                 if(orders.size()==0){
@@ -651,6 +665,7 @@ if(!characterExists) message = rcv.readIML();
                 //cout << "empty book\n";
                 }
                 else{
+                    bool br = 0;
                     for(auto x : orders){       // otherwise iterate over previous orders
                     //cout << "Checking "<<x<<endl;
                     // matrix[x].printMap();
@@ -664,20 +679,22 @@ if(!characterExists) message = rcv.readIML();
                                 count++;
                                 //cout <<"Cancelled:No Trade\n";
                                 cout <<"No Trade\n";
-
-                                continue;
+                                br = 1;
+                                break;
                                 }
                                 else if(quantity[x] == quantity[count]){
                                     orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());
+                                    quantity[x]=0;
                                     count++;
                                 //cout <<"Cancelled:No Trade\n";
                                 cout <<"No Trade\n";
-
-                                continue;
+                                br = 1;
+                                break;
                                 }
                                 else{
                                     orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());
                                     quantity[count] -= quantity[x];
+                                    break;
                                 }
                             }
                         }
@@ -686,13 +703,15 @@ if(!characterExists) message = rcv.readIML();
                                 quantity[x] += quantity[count];
                                 count ++;
                                 cout << "No Trade\n";
-                                continue;
+                                br  = 1;
+                                break;
                             }
                         }
                     }
                     // if(matrix[x] == temp && flag != Sign[x]) cout << "different type";                            // check if similar order structure is present
                     }
-                    orders.push_back(count);                            // check if order type is same
+                    if(br) continue;
+                    else orders.push_back(count);                            // check if order type is same
                 }
                 matrix[count] = temp;
                 delete flag;
@@ -734,7 +753,7 @@ if(!characterExists) message = rcv.readIML();
                                 if(matrix[l][f] != 0){cout << f<<" "<< matrix[l][f]<<" ";}
                             }                         // work on this output
                             if(Sign[l]){
-                            cout << prices[l]*-1<<" "<<q<<" ";
+                            cout << prices[l]<<" "<<q<<" ";
                             cout << "b\n";
                             }
                             else {
