@@ -511,6 +511,7 @@ int main(int argc, char **argv) {
             bool* flag = new bool;
             MyUnorderedMap<string,int> temp = inputProcessing(c, stocks,count,prices, flag); //temporary processing;
             // matrix[count] = inputProcessing(c, stocks,count,prices, flag);
+            splitlines[count] = c;
             Sign[count] = *flag;
             if(orders.size()==0){
                 orders.push_back(count);    // if no orders present directly add
@@ -527,8 +528,8 @@ int main(int argc, char **argv) {
                         //cout << "Match found\n";
                             if(prices[count] <= prices[x]){
                                 count++;
-                                cout <<"Buyissue:No Trade\n";
-                                // cout <<"No Trade\n"; 
+                                // cout <<"Buyissue:No Trade\n";
+                                cout <<"No Trade\n"; 
                                 br = 1;
                                 break;}
                             else{
@@ -539,8 +540,8 @@ int main(int argc, char **argv) {
                         if(prices[count] + prices[x] == 0){
                             orders.erase(std::remove(orders.begin(), orders.end(), x), orders.end());
                             count++;
-                            cout <<"Cancelled:No Trade\n";
-                            // cout <<"No Trade\n";
+                            // cout <<"Cancelled:No Trade\n";
+                            cout <<"No Trade\n";
                                 br  = 1;
                              break;
                         }
@@ -564,8 +565,8 @@ int main(int argc, char **argv) {
             kiloprocessor(subs, stocks, matrix, Sign);
             //cout<< subs.size()<<endl;
             if(subs.size()==0){count++;
-            cout <<"Nocomb:No Trade\n";
-            // cout <<"No Trade\n";
+            // cout <<"Nocomb:No Trade\n";
+            cout <<"No Trade\n";
             continue;}
             int maxp = 0;
             vector<int> plines;
@@ -604,8 +605,8 @@ int main(int argc, char **argv) {
             }
             else{
                 count++;
-                cout <<"Loss:No Trade\n";
-                // cout <<"No Trade\n";
+                // cout <<"Loss:No Trade\n";
+                cout <<"No Trade\n";
                 continue;
             }
             count++;
@@ -754,11 +755,11 @@ if(!characterExists) message = rcv.readIML();
                             }                         // work on this output
                             if(Sign[l]){
                             cout << prices[l]<<" "<<q<<" ";
-                            cout << "b\n";
+                            cout << "b#\n";
                             }
                             else {
                             cout << prices[l]<<" "<<q<<" ";
-                            cout << "s\n";
+                            cout << "s#\n";
                             }
                         }
 
