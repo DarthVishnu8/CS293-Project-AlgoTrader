@@ -1,15 +1,11 @@
 #include "market.h"
 #include <vector>
 #include <fstream>
-
+#include<iostream>
+#include<climits>
 using namespace std;
 
-int time=0;
-
-market::market(int argc, char** argv)
-{
-	
-}
+int timme=0;
 
 template <typename KeyType, typename ValueType>
 class MyUnorderedMap {
@@ -49,12 +45,30 @@ public:
         table.resize(initialSize);
     }
 
+    auto begin() const {
+        return table.begin();
+    }
+
+    auto end() const {
+        return table.end();
+    }
+
     void insert(const KeyType& key, const ValueType& value) {
         resize();
         size_t index = findEmptySlot(key);
         table[index].key = key;
         table[index].value = value;
         table[index].occupied = true;
+    }
+
+    std::vector<KeyType> keys() const {
+        std::vector<KeyType> result;
+        for (const auto& entry : table) {
+            if (entry.occupied) {
+                result.push_back(entry.key);
+            }
+        }
+        return result;
     }
 
     ValueType& operator[](const KeyType& key) {
@@ -68,10 +82,129 @@ public:
     }
 };
 
+bool mincompare(const vector<string>& a, const vector<string>& b) {
+    int index = 4; // Sorting based on the 4th index (0-indexed)
+
+    if (a[index] != b[index]) {
+        return stoi(a[index]) > stoi(b[index]); // Sort by 4th index in descending order
+    } else {
+        int sumA = (a[6] != "-1") ? stoi(a[0]) + stoi(a[6]) : INT_MAX;
+        int sumB = (b[6] != "-1") ? stoi(b[0]) + stoi(b[6]) : INT_MAX;
+
+        if (sumA != sumB) {
+            return sumA > sumB; // Sort by the lower sum of 0th and last index if last index is not -1
+        } else {
+            return a[1] > b[1]; // Sort alphabetically by the 1st index (KarGoExpress)
+        }
+    }
+}
+
+void mininsertIntoHeap(vector<vector<string>>& arr, vector<string> element) {
+    arr.push_back(element);
+    int index = arr.size() - 1;
+    while (index > 0 && mincompare(arr[(index - 1) / 2], arr[index])) {
+        swap(arr[index], arr[(index - 1) / 2]);
+        index = (index - 1) / 2;
+    }
+}
+
+bool maxcompare(const vector<string>& a, const vector<string>& b) {
+    int index = 4; // Sorting based on the 4th index (0-indexed)
+
+    if (a[index] != b[index]) {
+        return stoi(a[index]) < stoi(b[index]); // Sort by 4th index in descending order
+    } else {
+        int sumA = (a[6] != "-1") ? stoi(a[0]) + stoi(a[6]) : INT_MAX;
+        int sumB = (b[6] != "-1") ? stoi(b[0]) + stoi(b[6]) : INT_MAX;
+
+        if (sumA != sumB) {
+            return sumA > sumB; // Sort by the lower sum of 0th and last index if last index is not -1
+        } else {
+            
+                return a[1] > b[1]; // Sort alphabetically by the 1st index (KarGoExpress)
+        }
+    }
+}
+void minheapify(vector<vector<string>>& arr, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && mincompare(arr[left], arr[largest])) {
+        largest = left;
+    }
+
+    if (right < n && mincompare(arr[right], arr[largest])) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        minheapify(arr, n, largest);
+    }
+}
+
+void maxheapify(vector<vector<string>>& arr, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && maxcompare(arr[left], arr[largest])) {
+        largest = left;
+    }
+
+    if (right < n && maxcompare(arr[right], arr[largest])) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        maxheapify(arr, n, largest);
+    }
+}
+
+vector<string> deletemax(vector<vector<string>>& arr) {
+    if (arr.empty()) {
+        return {};
+    }
+
+    vector<string> minElement = arr[0];
+    arr[0] = arr.back();
+    arr.pop_back();
+
+    minheapify(arr, arr.size(), 0);
+
+    return minElement;
+}
+
+vector<string> deletemin(vector<vector<string>>& arr) {
+    if (arr.empty()) {
+        return {};
+    }
+
+    vector<string> minElement = arr[0];
+    arr[0] = arr.back();
+    arr.pop_back();
+
+    maxheapify(arr, arr.size(), 0);
+
+    return minElement;
+}
+
+
+void maxinsertIntoHeap(vector<vector<string>>& arr, vector<string> element) {
+    arr.push_back(element);
+    int index = arr.size() - 1;
+    while (index > 0 && maxcompare(arr[(index - 1) / 2], arr[index])) {
+        swap(arr[index], arr[(index - 1) / 2]);
+        index = (index - 1) / 2;
+    }
+}
+
 std::vector<std::string> takeInput()
 {
     std::ifstream inputFile;
-    inputFile.open("testoutput.txt");
+    inputFile.open("lolol.txt");
 
 
     std::vector<std::string> orderList;
@@ -111,6 +244,8 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
         string t="";
         for(auto c: order)
         {
+            if(c == '#'|| c=='$')
+            continue;
             if(c==' ')
             {tmp.push_back(t); t="";}
 
@@ -125,351 +260,130 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
     return ans;
 }
 
-int stringcmp(string s1, string s2)  // this function returns 0 if strings are equal, -1 if first string is smaller, 1 if second string is smaller
+market::market(int argc, char** argv)
 {
-    int index=0;
-    while(true)
-    {
-        if(s1[index]=='\0' && s2[index]=='\0')
-        return 0;
-
-        if(s1[index]=='\0' && s2[index]!='\0')
-        return -1;
-
-        if(s1[index]!='\0' && s2[index]=='\0')
-        return 1;
-
-        if(int(s1[index]) < int(s2[index]))
-        return -1;
-
-        if(int(s1[index]) > int(s2[index]))
-        return 1;
-
-
-        index++;
-    }
+	
 }
-
-int parent(int x)
-{
-    return (x-1)/2;
-}
-
-int left(int x)
-{
-    return 2*x+1;
-}
-
-int right(int x)
-{
-    return 2*x+2;
-}
-
-void deleteBuyMostPriorityElement(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock)
-{
-    int indexLen=ans[stock].size()-1;
-    ans[stock][0]= ans[stock][indexLen];
-    ans[stock].pop_back();
-    heapifyMax(ans,stock,0);
-}
-
-void deleteSellMostPriorityElement(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock)
-{
-    int indexLen=ans[stock].size()-1;
-    ans[stock][0]= ans[stock][indexLen];
-    ans[stock].pop_back();
-    heapifyMin(ans,stock,0);
-}
-
-void mySwap(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i, int j)
-{
-    vector<string> tmp=ans[stock][i];
-    ans[stock][i]=ans[stock][j];
-    ans[stock][j]=tmp;
-}
-
-// price starts with the character $ (linear combinations possible so cannot hardcode the index) will change this later. For now we have hardcoded the price index
-
-void heapifyMax(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i)
-{
-    int c;
-    int indexLen=ans[stock].size()-1;
-    if(right(i)<indexLen)       // right does not exist
-    {
-        if(left(i)<indexLen)    // neither left nor right exists if true
-        {
-            c=i;
-        }
-
-        else if (ans[stock][i][4] > ans[stock][left(i)][4])       // if price of stock[i] > stock[left(i)]
-        {
-            c=i;
-        }
-        
-        else if (ans[stock][i][4] < ans[stock][left(i)][4])      // if price of stock[i] < stock[left(i)]
-        {
-            c=left(i);
-        }
-
-        else{
-            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][left(i)][0])
-            c=left(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=left(i);
-            }
-        }
-
-    }
-
-    else{
-        if(ans[stock][i][4] > ans[stock][left(i)][4])
-        {
-            if(ans[stock][i][4] > ans[stock][right(i)][4])
-            c=i;
-
-            else if(ans[stock][i][4] < ans[stock][right(i)][4])
-            c=right(i);
-
-            else{
-            if(ans[stock][i][0] < ans[stock][right(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][right(i)][0])
-            c=right(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=right(i);
-            }
-        }
-        }
-
-        else if(ans[stock][i][4] == ans[stock][left(i)][4])
-        {
-            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][left(i)][0])
-            c=left(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=left(i);
-            }
-        }
-
-        else{
-            if(ans[stock][left(i)][4] > ans[stock][right(i)][4])
-            c=left(i);
-
-            else if(ans[stock][left(i)][4] < ans[stock][right(i)][4])
-            c=right(i);
-
-            else{
-            if(ans[stock][left(i)][0] < ans[stock][right(i)][0])       // prioritise by time if price same
-            c=left(i);
-
-            else if(ans[stock][left(i)][0] > ans[stock][right(i)][0])
-            c=right(i);
-
-            else{
-                if(stringcmp(ans[stock][left(i)][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
-                c=left(i);
-
-                else c=right(i);
-            }
-        }
-        }
-    }
-
-    if(c==i) return;
-
-    mySwap(ans,stock,i,c);
-
-    heapifyMax(ans,stock,c);
-
-}
-
-void heapifyMin(MyUnorderedMap<string,vector<vector<string>>> &ans,string stock,int i)
-{
-        int c;
-    int indexLen=ans[stock].size()-1;
-    if(right(i)<indexLen)       // right does not exist
-    {
-        if(left(i)<indexLen)    // neither left nor right exists if true
-        {
-            c=i;
-        }
-
-        else if (ans[stock][i][4] < ans[stock][left(i)][4])       // if price of stock[i] > stock[left(i)]
-        {
-            c=i;
-        }
-        
-        else if (ans[stock][i][4] > ans[stock][left(i)][4])      // if price of stock[i] < stock[left(i)]
-        {
-            c=left(i);
-        }
-
-        else{
-            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][left(i)][0])
-            c=left(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=left(i);
-            }
-        }
-
-    }
-
-    else{
-        if(ans[stock][i][4] < ans[stock][left(i)][4])
-        {
-            if(ans[stock][i][4] < ans[stock][right(i)][4])
-            c=i;
-
-            else if(ans[stock][i][4] > ans[stock][right(i)][4])
-            c=right(i);
-
-            else{
-            if(ans[stock][i][0] < ans[stock][right(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][right(i)][0])
-            c=right(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=right(i);
-            }
-        }
-        }
-
-        else if(ans[stock][i][4] == ans[stock][left(i)][4])
-        {
-            if(ans[stock][i][0] < ans[stock][left(i)][0])       // prioritise by time if price same
-            c=i;
-
-            else if(ans[stock][i][0] > ans[stock][left(i)][0])
-            c=left(i);
-
-            else{
-                if(stringcmp(ans[stock][i][1],ans[stock][left(i)][1])<0)      // prioritise alphabetically if time also same
-                c=i;
-
-                else c=left(i);
-            }
-        }
-
-        else{
-            if(ans[stock][left(i)][4] < ans[stock][right(i)][4])
-            c=left(i);
-
-            else if(ans[stock][left(i)][4] > ans[stock][right(i)][4])
-            c=right(i);
-
-            else{
-            if(ans[stock][left(i)][0] < ans[stock][right(i)][0])       // prioritise by time if price same
-            c=left(i);
-
-            else if(ans[stock][left(i)][0] > ans[stock][right(i)][0])
-            c=right(i);
-
-            else{
-                if(stringcmp(ans[stock][left(i)][1],ans[stock][right(i)][1])<0)      // prioritise alphabetically if time also same
-                c=left(i);
-
-                else c=right(i);
-            }
-        }
-        }
-    }
-
-    if(c==i) return;
-
-    mySwap(ans,stock,i,c);
-
-    heapifyMax(ans,stock,c);
-}
-
-void makeHeapMax(MyUnorderedMap<string,vector<vector<string>>> &ans, vector<string> c,string stock)              // creates a max heap
-{
-    ans[stock].push_back(c);
-    for(int i=ans[stock].size()-1;i>=0;i--)
-    heapifyMax(ans,stock,i);
-}
-
-void makeHeapMin(MyUnorderedMap<string,vector<vector<string>>> &ans, vector<string> c,string stock)             // creates a min heap
-{
-    ans[stock].push_back(c);
-    for(int i=ans[stock].size()-1;i>=0;i--)
-    heapifyMin(ans,stock,i);
-}
-
-
-MyUnorderedMap<string,vector<vector<string>>> processBuy(vector<vector<string>> orders)
-{
-    MyUnorderedMap<string,vector<vector<string>>> ans;
-    for(auto c: orders)
-    {
-        if(c[2][0]=='B')
-        makeHeapMax(ans,c,c[3]);
-    }
-    return ans;
-}
-
-MyUnorderedMap<string,vector<vector<string>>> processSell(vector<vector<string>> orders)
-{
-    MyUnorderedMap<string,vector<vector<string>>> ans;
-    for(auto c: orders)
-    {
-        if(c[2][0]=='S')
-        makeHeapMin(ans,c,c[3]);
-    }
-    return ans;
-}
-
 
 void market::start()
 {
-
     std::vector<std::string> orderList=takeInput();
-
-    MyUnorderedMap<vector<string>, vector<int>> tradeInfo;                // this will contain a map for the trades that actually happened string[0]=Buyer, string[1]=Seller, string[2]=stockName, int[0]=#shares, int[1]=cost/share
+    MyUnorderedMap<string, vector<vector<string>>> orderBook;
+    MyUnorderedMap<string, vector<int>> tradeinfo;
+    vector<vector<string>> orderListItems=splitBySpaceToGetItems(orderList);
     int totalAmountTransferred=0;
     int numberOfTrades=0;
     int numberofShares=0;
-    vector<vector<string>> orderListItems=splitBySpaceToGetItems(orderList); // This function returns a vector of string vectors which contains the individual information regarding all orders
-    MyUnorderedMap<string,vector<vector<string>>> buyOrderItems=processBuy(orderListItems);
-    MyUnorderedMap<string,vector<vector<string>>> sellOrderItems=processSell(orderListItems);
+    for(auto l: orderListItems){
+        // cout << "time is:"<<timme<<endl;
+        if(timme != stoi(l[0]))
+        {
+            // check expiry
+            timme = stoi(l[0]);
+            std::vector<std::string> mapKeys = orderBook.keys();
+            for (const auto& key : mapKeys) {
 
+                for(int f=0;f<orderBook[key].size();++f){
+                    if(orderBook[key][f][2] == "BUY"){
+                        if(stoi(orderBook[key][f][6]) != -1 && stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme){
+                        // cout << "found expired buy order\n";
+                            swap(orderBook[key][f],orderBook[key][orderBook[key].size()-1]);
+                            orderBook[key].pop_back();
+                            minheapify(orderBook[key], orderBook[key].size(), f);
+                        }
+                    }
+                    else{
+                        if(stoi(orderBook[key][f][6]) != -1 && stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme){
+                        // cout << "found expired sell order\n";
+                            swap(orderBook[key][f],orderBook[key][orderBook[key].size()-1]);
+                            orderBook[key].pop_back();
+                            maxheapify(orderBook[key], orderBook[key].size(), f);
+                        }
+                    }
+                }
+            }
+        }
+        
+        string probe = l[3]+l[2];
+        string pcomp;
+        if(l[2] == "BUY"){
+            pcomp = l[3]+"SELL";
+            while(orderBook[pcomp].size() != 0 && stoi(orderBook[pcomp][0][4]) <= stoi(l[4]) ){   // complementary heap exists and valid trade exists
+                // cout << "valid trade exists for " << probe <<"\n";
+                // update quantities
+                numberOfTrades++;
+                int q = min(stoi(orderBook[pcomp][0][5]), stoi(l[5]));
+                numberofShares += q;
+                totalAmountTransferred += q*stoi(orderBook[pcomp][0][4]);
+                cout << l[1] << " puchased "<< q<<" share of "<< l[3] << " from "<< orderBook[pcomp][0][1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
+                l[5] = to_string(stoi(l[5])-q);
+                // cout << "Decreased "<<l[1]<<"'s "<<l[3] << " by " << q<<"\n";
+                orderBook[pcomp][0][5] = to_string(stoi(orderBook[pcomp][0][5])-q);
+                // cout << "Decreased "<<orderBook[pcomp][0][1]<<"'s "<<orderBook[pcomp][0][3] << " by " << q<<"\n";
+                // if newline quantity is over then continue to next line
+                if(stoi(orderBook[pcomp][0][5]) == 0){
+                    deletemax(orderBook[pcomp]);
+                    // cout <<orderBook[pcomp][0][1] << " is out of "<<l[3]<< " stocks\n";
+                }
+                if(stoi(l[5]) == 0){
+                    // cout <<l[1] << " is out of "<<l[3]<< " stocks\n";
+                    break;
+                }  
+                // if heap quantity is over deletemax
+            }
+            if(stoi(l[5]) > 0){
+                maxinsertIntoHeap(orderBook[probe],l);
+                // cout << "Inserted "<<l[5] <<" of "<< l[3]<<" stocks in name of "<<l[1]<<"\n";
+            }
+        }
+        else{
+            pcomp = l[3]+"BUY";
+            while(orderBook[pcomp].size() != 0 && stoi(orderBook[pcomp][0][4]) >= stoi(l[4])){   // complementary heap exists and valid trade exists
+                // cout << "valid trade exists for " << probe <<"\n";
+                // update quantities
+                numberOfTrades++;
+                int q = min(stoi(orderBook[pcomp][0][5]), stoi(l[5]));
+                numberofShares += q;
+                totalAmountTransferred += q*stoi(orderBook[pcomp][0][4]);
+                cout << orderBook[pcomp][0][1] << " puchased "<< q<<" share of "<< l[3] << " from "<< l[1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
+                l[5] = to_string(stoi(l[5])-q);
+                // cout << "Decreased "<<l[1]<<"'s "<<l[3] << " by " << q<<"\n";
+
+                // cout << "Decreased "<<orderBook[pcomp][0][1]<<"'s "<<orderBook[pcomp][0][3] << " by " << q<<"\n";
+                orderBook[pcomp][0][5] = to_string(stoi(orderBook[pcomp][0][5])-q);
+                // if newline quantity is over then continue to next line
+                if(stoi(orderBook[pcomp][0][5]) == 0){
+                    deletemin(orderBook[pcomp]);
+                    // cout <<orderBook[pcomp][0][1] << " is out of "<<l[3]<< " stocks\n";
+
+                }
+                if(stoi(l[5]) == 0){
+                    // cout <<l[1] << " is out of "<<l[3]<< " stocks\n";
+                    break;
+                }  
+                // if heap quantity is over deletemax
+            }
+            if(stoi(l[5]) > 0){
+                mininsertIntoHeap(orderBook[probe],l);
+                // cout << "Inserted "<<l[5] <<" of "<< l[3]<<" stocks in name of "<<l[1]<<"\n";
+
+            }
+        } 
+        // cout << probe<<"\n";
+        // cout << "\n";
+        // cout << "Printing orderbook for "<<probe<<"\n";
+        // for ( auto f: orderBook[probe])
+        //     {
+        //         for(auto g: f){
+        //             cout << g<<" ";
+        //         }
+        //         cout << "\n";
+        //     }
+        //     cout << "\n";
+    }
+    cout << "\n";
+    cout << "---End of Day--- \n";
+    cout << "Total Amount of Money Transferred: $"<< totalAmountTransferred<<"\n";
+    cout << "Number of Completed Trades: "<< numberOfTrades<<"\n";
+    cout << "Number of Shares Traded: "<< numberofShares;
 }
-
-// My thought. Start iterating from the start of the vector containing the order list. If an order has expired make that vector entry null. Then within another loop, iterate over all the other remaining orders other than the one already in outer loop. Within the inner loop check whether the orders are compatible. If they are not compatible, move on. If they are compatible, store appropriate information within the tradeInfo map
-
-// compatible check algorithm: check if one is buy and other sell. If not, return false. else return true. Next check if order with buy has price >= sell. If yes return true, else return false.
-
-// expired check algorithm: current order being checked (outer loop order) originate time - prev order originate time > prev order time to live => expired and not compatible else both orders are alive wrt to each other.
-
-
-// linear combination parsing
-// different heaps for different stocks
