@@ -4,6 +4,8 @@
 
 using namespace std;
 
+int time=0;
+
 market::market(int argc, char** argv)
 {
 	
@@ -467,3 +469,7 @@ void market::start()
 // compatible check algorithm: check if one is buy and other sell. If not, return false. else return true. Next check if order with buy has price >= sell. If yes return true, else return false.
 
 // expired check algorithm: current order being checked (outer loop order) originate time - prev order originate time > prev order time to live => expired and not compatible else both orders are alive wrt to each other.
+
+
+// linear combination parsing
+// different heaps for different stocks
