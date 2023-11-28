@@ -5,7 +5,6 @@
 #include<climits>
 using namespace std;
 
-int timme=0;
 
 template <typename KeyType, typename ValueType>
 class MyUnorderedMap {
@@ -218,7 +217,7 @@ std::vector<std::string> takeInput()
         {i=1; continue;}
 
         if(line[0]=='@' || line[0]=='!')
-        continue;
+        break;
         
 
         orderList.push_back(line);
@@ -244,7 +243,7 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
         string t="";
         for(auto c: order)
         {
-            if(c == '#'|| c=='$')
+            if(c == '#'|| c =='$')
             continue;
             if(c==' ')
             {tmp.push_back(t); t="";}
@@ -254,38 +253,37 @@ vector<vector<string>> splitBySpaceToGetItems(vector<string> orders)
             }
         }
           ans.push_back(tmp);
-          tmp.clear();
-
     }
     return ans;
 }
-
+char arg ;
 market::market(int argc, char** argv)
 {
-	
+	arg = argv[1][0];
 }
 
 void market::start()
 {
+    int timme=0;
+    int mult = arg - '0';
     std::vector<std::string> orderList=takeInput();
     MyUnorderedMap<string, vector<vector<string>>> orderBook;
-    MyUnorderedMap<string, vector<int>> tradeinfo;
+    MyUnorderedMap<string, vector<int>> tradeInfo;
     vector<vector<string>> orderListItems=splitBySpaceToGetItems(orderList);
     int totalAmountTransferred=0;
     int numberOfTrades=0;
     int numberofShares=0;
+    int i = 0;
     for(auto l: orderListItems){
         // cout << "time is:"<<timme<<endl;
-        if(timme != stoi(l[0]))
-        {
+        if(i == mult){i=0;timme++;
             // check expiry
-            timme = stoi(l[0]);
             std::vector<std::string> mapKeys = orderBook.keys();
             for (const auto& key : mapKeys) {
 
                 for(int f=0;f<orderBook[key].size();++f){
                     if(orderBook[key][f][2] == "BUY"){
-                        if(stoi(orderBook[key][f][6]) != -1 && stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme){
+                        if((stoi(orderBook[key][f][6]) != -1) && (stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme)){
                         // cout << "found expired buy order\n";
                             swap(orderBook[key][f],orderBook[key][orderBook[key].size()-1]);
                             orderBook[key].pop_back();
@@ -293,7 +291,7 @@ void market::start()
                         }
                     }
                     else{
-                        if(stoi(orderBook[key][f][6]) != -1 && stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme){
+                        if((stoi(orderBook[key][f][6]) != -1) && (stoi(orderBook[key][f][0])+stoi(orderBook[key][f][6]) < timme)){
                         // cout << "found expired sell order\n";
                             swap(orderBook[key][f],orderBook[key][orderBook[key].size()-1]);
                             orderBook[key].pop_back();
@@ -315,10 +313,22 @@ void market::start()
                 int q = min(stoi(orderBook[pcomp][0][5]), stoi(l[5]));
                 numberofShares += q;
                 totalAmountTransferred += q*stoi(orderBook[pcomp][0][4]);
-                cout << l[1] << " puchased "<< q<<" share of "<< l[3] << " from "<< orderBook[pcomp][0][1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
+                cout << l[1] << " purchased "<< q<<" share of "<< l[3] << " from "<< orderBook[pcomp][0][1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
                 l[5] = to_string(stoi(l[5])-q);
                 // cout << "Decreased "<<l[1]<<"'s "<<l[3] << " by " << q<<"\n";
                 orderBook[pcomp][0][5] = to_string(stoi(orderBook[pcomp][0][5])-q);
+
+                if(tradeInfo[l[1]].size()==0){
+                    tradeInfo[l[1]] = std::vector<int>(3, 0);
+                }
+                    tradeInfo[l[1]][0] += q;
+                    tradeInfo[l[1]][2] -= q*stoi(orderBook[pcomp][0][4]);
+                if(tradeInfo[orderBook[pcomp][0][1]].size()==0){
+                    tradeInfo[orderBook[pcomp][0][1]] = std::vector<int>(3, 0);
+                }
+                    tradeInfo[orderBook[pcomp][0][1]][1] += q;
+                    tradeInfo[orderBook[pcomp][0][1]][2] += q*stoi(orderBook[pcomp][0][4]);
+
                 // cout << "Decreased "<<orderBook[pcomp][0][1]<<"'s "<<orderBook[pcomp][0][3] << " by " << q<<"\n";
                 // if newline quantity is over then continue to next line
                 if(stoi(orderBook[pcomp][0][5]) == 0){
@@ -345,9 +355,20 @@ void market::start()
                 int q = min(stoi(orderBook[pcomp][0][5]), stoi(l[5]));
                 numberofShares += q;
                 totalAmountTransferred += q*stoi(orderBook[pcomp][0][4]);
-                cout << orderBook[pcomp][0][1] << " puchased "<< q<<" share of "<< l[3] << " from "<< l[1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
+                cout << orderBook[pcomp][0][1] << " purchased "<< q<<" share of "<< l[3] << " from "<< l[1] <<" for $" << orderBook[pcomp][0][4]<<"/share"<<"\n";
                 l[5] = to_string(stoi(l[5])-q);
                 // cout << "Decreased "<<l[1]<<"'s "<<l[3] << " by " << q<<"\n";
+
+                if(tradeInfo[l[1]].size()==0){
+                    tradeInfo[l[1]] = std::vector<int>(3, 0);
+                }
+                    tradeInfo[l[1]][1] += q;
+                    tradeInfo[l[1]][2] += q*stoi(orderBook[pcomp][0][4]);
+                if(tradeInfo[orderBook[pcomp][0][1]].size()==0){
+                    tradeInfo[orderBook[pcomp][0][1]] = std::vector<int>(3, 0);
+                }
+                    tradeInfo[orderBook[pcomp][0][1]][0] += q;
+                    tradeInfo[orderBook[pcomp][0][1]][2] -= q*stoi(orderBook[pcomp][0][4]);
 
                 // cout << "Decreased "<<orderBook[pcomp][0][1]<<"'s "<<orderBook[pcomp][0][3] << " by " << q<<"\n";
                 orderBook[pcomp][0][5] = to_string(stoi(orderBook[pcomp][0][5])-q);
@@ -369,6 +390,7 @@ void market::start()
 
             }
         } 
+        i++;
         // cout << probe<<"\n";
         // cout << "\n";
         // cout << "Printing orderbook for "<<probe<<"\n";
@@ -385,5 +407,9 @@ void market::start()
     cout << "---End of Day--- \n";
     cout << "Total Amount of Money Transferred: $"<< totalAmountTransferred<<"\n";
     cout << "Number of Completed Trades: "<< numberOfTrades<<"\n";
-    cout << "Number of Shares Traded: "<< numberofShares;
+    cout << "Number of Shares Traded: "<< numberofShares<<"\n";
+    std::vector<std::string> infokeys = tradeInfo.keys();
+    for (const auto& key : infokeys) {
+        cout << key << " bought "<<tradeInfo[key][0]<<" and sold "<< tradeInfo[key][1]<<" for a net transfer of "<<tradeInfo[key][2]<<"\n";
+    }
 }
